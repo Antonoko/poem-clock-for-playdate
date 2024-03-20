@@ -1,0 +1,6 @@
+name=PoemClock
+author=Haru
+description=poem clock for the Playdate
+bundleID=com.haru.poemclock
+version=0.1
+buildNumber=3
