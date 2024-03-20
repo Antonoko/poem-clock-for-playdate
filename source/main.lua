@@ -102,14 +102,14 @@ function switch_sc_poem_direction(state)
             direction_choose = "U"
             mode_choose = "SC"
         elseif y < x_func(x) and y > x_ne_func(x) then
-            direction_choose = "R"
-            mode_choose = "SC_R90"
+            direction_choose = "L"
+            mode_choose = "SC_L90"
         elseif y < x_func(x) and y < x_ne_func(x) then
             direction_choose = "D"
             mode_choose = "SC_180"
         elseif y > x_func(x) and y < x_ne_func(x) then
-            direction_choose = "L"
-            mode_choose = "SC_L90"
+            direction_choose = "R"
+            mode_choose = "SC_R90"
         end
 
         print("direction_choose:", direction_choose)
@@ -327,7 +327,7 @@ end
 local init = function ()
 
 	playdate.display.setRefreshRate(1)
-    playdate.setAutoLockDisabled()
+    playdate.setAutoLockDisabled(true)
 
     -- Load the state
 	load_state()
