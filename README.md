@@ -1,3 +1,4 @@
 # playdate-poem-clock
  
-json 懒加载
+pause info
+side menu optimization

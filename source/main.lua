@@ -29,11 +29,12 @@ local FONTS <const> = {
     },
     English = {
         name = "English",
-        font = gfx.font.new('font/SourceHanSerifCN-SemiBold'),
+        font = gfx.font.new('font/Roobert-20-Medium'),
         direction = "U"
     },
-
 }
+
+local font_en_small <const> = gfx.font.new('font/Roobert-11-Medium')
 
 local MODES <const> = {
     "SC",
@@ -54,6 +55,7 @@ local imagetable_indicator <const> = gfx.imagetable.new("img/indicator-sc-poem")
 local imagetable_indicator_whitemask <const> = gfx.image.new("img/indicator-sc-poem-whitemask")
 
 local poem_table_sc <const> = json.decodeFile("text/poem_zh.json")
+local poem_table_en = nil
 
 local mode_choose = "SC"
 local invert_color = false
@@ -124,7 +126,7 @@ end
 
 -----------------------------------------------------------------
 
-function render_sc_poem(mode, time_str, random_seed)
+function render_sc_poem(time_str, random_seed)
     math.randomseed(random_seed)
 
     local time_now_str = time_str
@@ -157,7 +159,7 @@ function render_sc_poem(mode, time_str, random_seed)
 
 
     clean_screen()
-    if mode == "SC_L90" then
+    if mode_choose == "SC_L90" then
         local base_pos = {
             x = math.random(0, screenWidth - max_text_width) + 10,
             y = math.random(0, screenHeight - max_text_height) + 20,
@@ -166,7 +168,7 @@ function render_sc_poem(mode, time_str, random_seed)
         for i, j in ipairs(split_text(poem_text, '\n')) do
             gfx.drawTextAligned(j, base_pos.x, base_pos.y + line_height * (i-1), kTextAlignment.left)
         end
-    elseif mode == "SC_R90" then
+    elseif mode_choose == "SC_R90" then
         local base_pos = {
             x = math.random(max_text_width, screenWidth) - 10,
             y = math.random(0, screenHeight - max_text_height) + 20,
@@ -175,7 +177,7 @@ function render_sc_poem(mode, time_str, random_seed)
         for i, j in ripairs(split_text(poem_text, '\n')) do
             gfx.drawTextAligned(utf8_reverse(j), base_pos.x, base_pos.y + line_height * (i-1), kTextAlignment.right)
         end
-    elseif mode == "SC_180" then
+    elseif mode_choose == "SC_180" then
         local base_pos = {
             x = math.random(max_text_width, screenWidth) - 10,
             y = math.random(0, screenHeight - max_text_height) + 20,
@@ -184,7 +186,7 @@ function render_sc_poem(mode, time_str, random_seed)
         for i, j in ripairs(split_text(poem_text, '\n')) do
             gfx.drawTextAligned(utf8_reverse(j), base_pos.x, base_pos.y + line_height * (i-1), kTextAlignment.right)
         end
-    elseif mode == "SC" then
+    elseif mode_choose == "SC" then
         local base_pos = {
             x = math.random(0, screenWidth - max_text_width) + 10,
             y = math.random(0, screenHeight - max_text_height) + 20,
@@ -197,8 +199,54 @@ function render_sc_poem(mode, time_str, random_seed)
 
 end
 
-function render_en_poem()
-    -- poem_table = json.decodeFile("text/en_poem")
+
+function render_en_poem(time_str, random_seed)
+    if poem_table_en == nil then
+        poem_table_en = json.decodeFile("text/poem_en.json")
+    end
+
+    math.randomseed(random_seed)
+    
+    local time_now_str = time_str
+    if poem_table_en[time_now_str] == nil then
+        print(time_str.." not in json")
+        return
+    end
+    local random_index = math.random(#poem_table_en[time_now_str])
+    local poem_text = poem_table_en[time_now_str][random_index]
+
+    gfx.setFont(FONTS[mode_choose].font)
+    local text_size = gfx.getTextSize("M")
+    local line_height = text_size * 2
+
+    local max_text_height = 0
+    local max_text_width = 5
+    for i, j in ipairs(split_text(poem_text, '\n')) do
+        local text_width = text_size * #j
+        if text_width > max_text_width then
+            max_text_width = text_width
+        end
+        max_text_height += line_height
+    end
+    if max_text_width > screenWidth then
+        max_text_width = screenWidth-2
+        -- small font type optimize
+        gfx.setFont(font_en_small)
+        line_height = line_height//1.2
+    end
+    if max_text_height > screenHeight then
+        max_text_height = screenHeight-2
+    end
+
+    clean_screen()
+    local base_pos = {
+        x = math.random(0, screenWidth - max_text_width) + 10,
+        y = math.random(0, screenHeight - max_text_height) + 10,
+    }
+    for i, j in ipairs(split_text(poem_text, '\n')) do
+        gfx.drawTextAligned(j, base_pos.x, base_pos.y + line_height * (i-1), kTextAlignment.left)
+    end
+
 end
 
 
@@ -342,9 +390,9 @@ function reload(random_seed)
     random_seed = random_seed or playdate.getTime().millisecond
 
     if starts_with(mode_choose, "SC") then
-        render_sc_poem(mode_choose, last_time_str, random_seed)
+        render_sc_poem(last_time_str, random_seed)
     elseif mode_choose == "English" then
-        render_en_poem()
+        render_en_poem(last_time_str, random_seed)
     end
 end
 
@@ -354,10 +402,10 @@ function playdate.update()
     if last_time_str ~= get_now_time_string() then
         last_time_str = get_now_time_string()
         current_seed = math.randomseed(playdate.getTime().millisecond)
-        reload()
+        reload(current_seed)
     end
 
-    if playdate.buttonIsPressed( playdate.kButtonA ) then
+    if playdate.buttonIsPressed( playdate.kButtonA ) and mode_choose ~= "English" then
         playdate.display.setRefreshRate(30)
         switch_sc_poem_direction("start")
     end
