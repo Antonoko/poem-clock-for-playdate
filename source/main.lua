@@ -41,7 +41,13 @@ local MODES <const> = {
     "SC_R90",
     "SC_L90",
     "SC_180",
-    "English"
+    "English",
+}
+
+local MODES_SIDEOPTION <const> = {
+    "Chinese",
+    "English",
+    "Random",
 }
 
 local INDICATOR_DIRECTION_RELATION <const> = {
@@ -49,16 +55,20 @@ local INDICATOR_DIRECTION_RELATION <const> = {
     R = 4,
     U = 2,
     D = 3,
+    X = 5,
 }
 
 local imagetable_indicator <const> = gfx.imagetable.new("img/indicator-sc-poem")
 local imagetable_indicator_whitemask <const> = gfx.image.new("img/indicator-sc-poem-whitemask")
+local image_instruction <const> = gfx.image.new("img/menu-instruction")
 
 local poem_table_sc <const> = json.decodeFile("text/poem_zh.json")
 local poem_table_en = nil
 
 local mode_choose = "SC"
+local mode_choose_sideoption = "Chinese"
 local invert_color = false
+local debug_mode = false
 
 local current_seed = math.randomseed(playdate.getTime().millisecond)
 local last_time_str = ""
@@ -150,19 +160,19 @@ function render_sc_poem(time_str, random_seed)
         end
         max_text_height += line_height
     end
-    if max_text_width > screenWidth then
-        max_text_width = screenWidth-2
+    if max_text_width > screenWidth-10 then
+        max_text_width = screenWidth-12
     end
-    if max_text_height > screenHeight then
-        max_text_height = screenHeight-2
+    if max_text_height > screenHeight-20 then
+        max_text_height = screenHeight-22
     end
 
 
     clean_screen()
     if mode_choose == "SC_L90" then
         local base_pos = {
-            x = math.random(0, screenWidth - max_text_width) + 10,
-            y = math.random(0, screenHeight - max_text_height) + 20,
+            x = math.random(10, screenWidth - max_text_width),
+            y = math.random(20, screenHeight - max_text_height),
         }
 
         for i, j in ipairs(split_text(poem_text, '\n')) do
@@ -170,8 +180,8 @@ function render_sc_poem(time_str, random_seed)
         end
     elseif mode_choose == "SC_R90" then
         local base_pos = {
-            x = math.random(max_text_width, screenWidth) - 10,
-            y = math.random(0, screenHeight - max_text_height) + 20,
+            x = math.random(max_text_width, screenWidth-10),
+            y = math.random(20, screenHeight - max_text_height),
         }
 
         for i, j in ripairs(split_text(poem_text, '\n')) do
@@ -179,8 +189,8 @@ function render_sc_poem(time_str, random_seed)
         end
     elseif mode_choose == "SC_180" then
         local base_pos = {
-            x = math.random(max_text_width, screenWidth) - 10,
-            y = math.random(0, screenHeight - max_text_height) + 20,
+            x = math.random(max_text_width, screenWidth-10),
+            y = math.random(20, screenHeight - max_text_height),
         }
 
         for i, j in ripairs(split_text(poem_text, '\n')) do
@@ -188,8 +198,8 @@ function render_sc_poem(time_str, random_seed)
         end
     elseif mode_choose == "SC" then
         local base_pos = {
-            x = math.random(0, screenWidth - max_text_width) + 10,
-            y = math.random(0, screenHeight - max_text_height) + 20,
+            x = math.random(10, screenWidth - max_text_width),
+            y = math.random(20, screenHeight - max_text_height),
         }
 
         for i, j in ipairs(split_text(poem_text, '\n')) do
@@ -228,20 +238,20 @@ function render_en_poem(time_str, random_seed)
         end
         max_text_height += line_height
     end
-    if max_text_width > screenWidth then
-        max_text_width = screenWidth-2
+    if max_text_width > screenWidth-10 then
+        max_text_width = screenWidth-12
         -- small font type optimize
         gfx.setFont(font_en_small)
         line_height = line_height//1.2
     end
-    if max_text_height > screenHeight then
-        max_text_height = screenHeight-2
+    if max_text_height > screenHeight-20 then
+        max_text_height = screenHeight-22
     end
 
     clean_screen()
     local base_pos = {
-        x = math.random(0, screenWidth - max_text_width) + 10,
-        y = math.random(0, screenHeight - max_text_height) + 10,
+        x = math.random(10, screenWidth - max_text_width),
+        y = math.random(20, screenHeight - max_text_height),
     }
     for i, j in ipairs(split_text(poem_text, '\n')) do
         gfx.drawTextAligned(j, base_pos.x, base_pos.y + line_height * (i-1), kTextAlignment.left)
@@ -253,9 +263,10 @@ end
 function sidebar_setting()
     local menu = playdate.getSystemMenu()
 
-    local modeMenuItem, error = menu:addOptionsMenuItem("Mode", MODES, mode_choose, function(value)
+    local modeMenuItem, error = menu:addOptionsMenuItem("Poem", MODES_SIDEOPTION, mode_choose_sideoption, function(value)
         print("Mode selected: ", value)
-        mode_choose = value
+        apply_mode_choose_by_sideoption(value)
+        mode_choose_sideoption = value
         save_state()
         reload(current_seed)
     end)
@@ -266,6 +277,32 @@ function sidebar_setting()
         setInverted(invert_color)
         save_state()
     end)
+end
+
+
+function apply_mode_choose_by_sideoption(value)
+    -- ignore "Random"
+    if value == "English" then
+        mode_choose = "English"
+    elseif value == "Chinese" then
+        if not starts_with(mode_choose, "SC") then
+            mode_choose = "SC"
+        end
+    end
+end
+
+function debug_mode_random_choose_poem()
+    local debug_seed = playdate.getTime().millisecond
+    math.randomseed(debug_seed)
+    local debug_random_minute = math.random(0,59)
+    if debug_random_minute<10 then
+        last_time_str = string.format( "%d:0%d", math.random(0,23), debug_random_minute)
+    else
+        last_time_str = string.format( "%d:%d", math.random(0,23), debug_random_minute)
+    end
+    print("debug mode trigger: ", last_time_str)
+    current_seed = debug_seed
+    reload(debug_seed)
 end
 
 -----------------------------------------------------------------
@@ -353,6 +390,7 @@ function save_state()
 	local state = {}
 	state.invert_color = invert_color
 	state.mode_choose = mode_choose
+    state.mode_choose_sideoption = mode_choose_sideoption
 	playdate.datastore.write(state)
 	print("State saved!")
 end
@@ -369,6 +407,7 @@ function load_state()
 		print("State found!")
 	end
 	mode_choose = get_or_default(state, "mode_choose", "string", MODES[1])
+    mode_choose_sideoption = get_or_default(state, "mode_choose_sideoption", "string", MODES_SIDEOPTION[1])
 	invert_color = get_or_default(state, "invert_color", "boolean", false)
 end
 
@@ -376,6 +415,7 @@ local init = function ()
 
 	playdate.display.setRefreshRate(1)
     playdate.setAutoLockDisabled(true)
+    playdate.setMenuImage(image_instruction)
 
     -- Load the state
 	load_state()
@@ -383,36 +423,69 @@ local init = function ()
 
 	-- Set the background color
 	gfx.setBackgroundColor(gfx.kColorWhite)
-	setInverted(inverted)
+	setInverted(invert_color)
 end
 
 function reload(random_seed)
     random_seed = random_seed or playdate.getTime().millisecond
+
+    if mode_choose_sideoption == "Random" then
+        local random_mode_index = math.random( #MODES_SIDEOPTION-1 )
+        apply_mode_choose_by_sideoption(MODES_SIDEOPTION[random_mode_index])
+        if random_index == 1 then
+            setInverted(true)
+        else
+            setInverted(false)
+        end
+    end
 
     if starts_with(mode_choose, "SC") then
         render_sc_poem(last_time_str, random_seed)
     elseif mode_choose == "English" then
         render_en_poem(last_time_str, random_seed)
     end
+
 end
 
 ------------------------------------------------------------
 
 function playdate.update()
-    if last_time_str ~= get_now_time_string() then
+    if last_time_str ~= get_now_time_string() and (not debug_mode) then
         last_time_str = get_now_time_string()
-        current_seed = math.randomseed(playdate.getTime().millisecond)
+        current_seed = playdate.getTime().millisecond
         reload(current_seed)
     end
 
-    if playdate.buttonIsPressed( playdate.kButtonA ) and mode_choose ~= "English" then
-        playdate.display.setRefreshRate(30)
-        switch_sc_poem_direction("start")
+    if playdate.buttonIsPressed( playdate.kButtonA ) or  playdate.buttonIsPressed( playdate.kButtonB ) then
+        if starts_with(mode_choose, "SC") then
+            playdate.display.setRefreshRate(30)
+            switch_sc_poem_direction("start")
+        elseif mode_choose == "English" then
+            draw_indicator("X")
+        end
     end
+
+    -- debug mode
+    if playdate.buttonIsPressed( playdate.kButtonDown ) then
+        debug_mode = true
+        playdate.display.setRefreshRate(5)
+        debug_mode_random_choose_poem()
+    end
+    if playdate.buttonIsPressed( playdate.kButtonUp ) then
+        debug_mode = false
+        playdate.display.setRefreshRate(1)
+        print("debug mode exist")
+    end
+
 end
 
 
 function playdate.AButtonUp()
+    switch_sc_poem_direction("stop")
+    playdate.display.setRefreshRate(1)
+end
+
+function playdate.BButtonUp()
     switch_sc_poem_direction("stop")
     playdate.display.setRefreshRate(1)
 end
