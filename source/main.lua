@@ -465,18 +465,6 @@ function playdate.update()
         end
     end
 
-    -- debug mode
-    if playdate.buttonIsPressed( playdate.kButtonDown ) then
-        debug_mode = true
-        playdate.display.setRefreshRate(5)
-        debug_mode_random_choose_poem()
-    end
-    if playdate.buttonIsPressed( playdate.kButtonUp ) then
-        debug_mode = false
-        playdate.display.setRefreshRate(1)
-        print("debug mode exist")
-    end
-
 end
 
 
@@ -489,5 +477,17 @@ function playdate.BButtonUp()
     switch_sc_poem_direction("stop")
     playdate.display.setRefreshRate(1)
 end
+
+-- debug mode
+-- function playdate.downButtonUp()
+--     playdate.display.setRefreshRate(20)
+--     debug_mode = true
+--     debug_mode_random_choose_poem()
+-- end
+-- function playdate.upButtonUp()
+--     debug_mode = false
+--     playdate.display.setRefreshRate(1)
+--     print("debug mode exist")
+-- end
 
 init()

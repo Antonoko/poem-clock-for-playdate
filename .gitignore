@@ -41,4 +41,5 @@ luac.out
 
 config-coze.json
 source.pdx
-poem.pdx
+PoemClock.pdx
+PoemClock-debug.pdx
