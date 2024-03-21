@@ -29,7 +29,7 @@
 
 ## How to build | 如何构建
 
-Configure [Playdate SDK](https://play.date/dev/) and global variables, use `pdc source PoemClock` to build.
+> Configure [Playdate SDK](https://play.date/dev/) and global variables, use `pdc source PoemClock` to build.
 
 配置 [Playdate SDK](https://play.date/dev/) 与全局变量，使用 `pdc source PoemClock` 进行构建。
 
