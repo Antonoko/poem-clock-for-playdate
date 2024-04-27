@@ -3,5 +3,5 @@ author=Haru
 description=poem clock for the Playdate
 bundleID=com.haru.poemclock
 version=1.1
-buildNumber=6
+buildNumber=7
 imagePath=img/launcher

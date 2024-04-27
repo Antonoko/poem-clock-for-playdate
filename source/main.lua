@@ -72,6 +72,7 @@ local white_mask_img2 <const> = gfx.image.new("img/white-mask2")
 local poem_table_sc <const> = json.decodeFile("text/poem_zh.json")
 local poem_table_en = nil
 local poem_table_kk_advice <const> = json.decodeFile("text/kk-quote.json")
+local kk_counter = 5 -- update per 3 mins
 
 local mode_choose = "SC"
 local mode_choose_sideoption = "Chinese"
@@ -177,6 +178,15 @@ end
 -----------------------------------------------------------------
 
 function render_sc_poem(time_str, random_seed)
+    if mode_choose_sideoption == "KK advice" then
+        if kk_counter < 3 then
+            kk_counter += 1
+            return
+        else
+            kk_counter = 0
+        end
+    end
+
     math.randomseed(random_seed)
 
     clean_screen()
