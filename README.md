@@ -4,13 +4,15 @@
 
 语言模型结合当前时间、为每分钟撰写一句诗歌，显示在 Playdate 上。可选择中文或英文。
 
+V1.1 - 添加了凯文·凯利的人生建议
+
 ![screenshot_menu](https://github.com/Antonoko/poem-clock-for-playdate/blob/main/__asset__/showcase.jpg)
 
 ## How to use | 如何使用
 
-> Download PoemClock.pdx.zip from Release and sideload it to Playdate.
+> Download PoemClock.pdx.zip from [Release](https://github.com/Antonoko/poem-clock-for-playdate/releases) and sideload it to Playdate.
 
-从 Release 下载 [PoemClock.pdx.zip](https://github.com/Antonoko/poem-clock-for-playdate/releases/download/main_branch/PoemClock_v1.0.pdx.zip)，sideload 侧载到 Playdate 即可。
+从 Release 下载 [PoemClock.pdx.zip](https://github.com/Antonoko/poem-clock-for-playdate/releases)，sideload 侧载到 Playdate 即可。
 
 ![screenshot_menu](https://github.com/Antonoko/poem-clock-for-playdate/blob/main/__asset__/screenshot_game.png)
 

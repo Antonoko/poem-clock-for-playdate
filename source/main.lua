@@ -10,28 +10,32 @@ local FONTS <const> = {
     SC = {
         name = "SC",
         font = gfx.font.new('font/SourceHanSerifCN-SemiBold'),
+        font_small = gfx.font.new('font/SourceHanSansCN-M-20px'),
         direction = "U"
     },
     SC_R90 = {
         name = "SC_R90",
         font = gfx.font.new('font/SourceHanSerifCN-SemiBold-R90'),
+        font_small = gfx.font.new('font/SourceHanSansCN-M-20px-R90'),
         direction = "R"
     },
     SC_L90 = {
         name = "SC_L90",
         font = gfx.font.new('font/SourceHanSerifCN-SemiBold-L90'),
+        font_small = gfx.font.new('font/SourceHanSansCN-M-20px-L90'),
         direction = "L"
     },
     SC_180 = {
         name = "SC_180",
         font = gfx.font.new('font/SourceHanSerifCN-SemiBold-180'),
+        font_small = gfx.font.new('font/SourceHanSansCN-M-20px-180'),
         direction = "D"
     },
     English = {
         name = "English",
         font = gfx.font.new('font/Roobert-20-Medium'),
         direction = "U"
-    },
+    }
 }
 
 local font_en_small <const> = gfx.font.new('font/Roobert-11-Medium')
@@ -47,6 +51,7 @@ local MODES <const> = {
 local MODES_SIDEOPTION <const> = {
     "Chinese",
     "English",
+    "KK advice",
     "Random",
 }
 
@@ -61,9 +66,12 @@ local INDICATOR_DIRECTION_RELATION <const> = {
 local imagetable_indicator <const> = gfx.imagetable.new("img/indicator-sc-poem")
 local imagetable_indicator_whitemask <const> = gfx.image.new("img/indicator-sc-poem-whitemask")
 local image_instruction <const> = gfx.image.new("img/menu-instruction")
+local white_mask_img <const> = gfx.image.new("img/white-mask")
+local white_mask_img2 <const> = gfx.image.new("img/white-mask2")
 
 local poem_table_sc <const> = json.decodeFile("text/poem_zh.json")
 local poem_table_en = nil
+local poem_table_kk_advice <const> = json.decodeFile("text/kk-quote.json")
 
 local mode_choose = "SC"
 local mode_choose_sideoption = "Chinese"
@@ -134,18 +142,59 @@ function switch_sc_poem_direction(state)
 
 end
 
+
+function draw_analog_clock()
+    local time_now = playdate.getTime()
+    local hour = time_now.hour
+    if hour>12 then
+        hour -= 12
+    end
+    local hour_angle = mapValue(hour+(time_now.minute/60), 0, 12, 0, 360)
+    local minute_angle = mapValue(time_now.minute, 0, 60, 0, 360)
+    local hour_start_blank = 60
+    local hour_length = 24 + hour_start_blank
+    local minute_start_blank = 30
+    local minute_length = 60 + minute_start_blank
+    local hour_start_x, hour_start_y = getCoordinates(hour_angle-90, hour_start_blank)
+    local hour_end_x, hour_end_y = getCoordinates(hour_angle-90, hour_length)
+    local minute_start_x, minute_start_y = getCoordinates(minute_angle-90, minute_start_blank)
+    local minute_end_x, minute_end_y = getCoordinates(minute_angle-90, minute_length)
+    print(hour_angle, minute_angle)
+    print(hour_start_x, hour_start_y, hour_end_x, hour_end_y)
+    print(minute_start_x, minute_start_y, minute_end_x, minute_end_y)
+
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(8)
+    gfx.drawLine(hour_start_x, hour_start_y, hour_end_x, hour_end_y)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(2)
+    gfx.drawLine(minute_start_x, minute_start_y, minute_end_x, minute_end_y)
+    white_mask_img2:draw(0,0)
+    
+end
+
+
 -----------------------------------------------------------------
 
 function render_sc_poem(time_str, random_seed)
     math.randomseed(random_seed)
 
-    local time_now_str = time_str
-    if poem_table_sc[time_now_str] == nil then
-        print(time_str.." not in json")
-        return
+    clean_screen()
+
+    local poem_text = "nothing found"
+    if mode_choose_sideoption == "Chinese" then
+        local time_now_str = time_str
+        if poem_table_sc[time_now_str] == nil then
+            print(time_str.." not in json")
+            return
+        end
+        local random_index = math.random(#poem_table_sc[time_now_str])
+        poem_text = poem_table_sc[time_now_str][random_index]
+    elseif mode_choose_sideoption == "KK advice" then
+        poem_text = poem_table_kk_advice["kk_quote"][math.random(#poem_table_kk_advice["kk_quote"])]
+        draw_analog_clock()
     end
-    local random_index = math.random(#poem_table_sc[time_now_str])
-    local poem_text = poem_table_sc[time_now_str][random_index]
+
 
     gfx.setFont(FONTS[mode_choose].font)
     local text_size = gfx.getTextSize("啊")
@@ -153,6 +202,7 @@ function render_sc_poem(time_str, random_seed)
 
     local max_text_height = 0
     local max_text_width = 5
+    local enable_small_font_condition = false
     for i, j in ipairs(split_text(poem_text, '\n')) do
         local text_width = text_size * (#j//2)
         if text_width > max_text_width then
@@ -162,13 +212,22 @@ function render_sc_poem(time_str, random_seed)
     end
     if max_text_width > screenWidth-10 then
         max_text_width = screenWidth-12
+        enable_small_font_condition = true
     end
     if max_text_height > screenHeight-20 then
         max_text_height = screenHeight-22
+        enable_small_font_condition = true
+    end
+    if enable_small_font_condition then
+        gfx.setFont(FONTS[mode_choose].font_small)
+        text_size = gfx.getTextSize("啊")
+        line_height = text_size * 1.6
     end
 
+    max_text_height = math.floor(max_text_height)
 
-    clean_screen()
+
+
     if mode_choose == "SC_L90" then
         local base_pos = {
             x = math.random(10, screenWidth - max_text_width),
@@ -288,6 +347,8 @@ function apply_mode_choose_by_sideoption(value)
         if not starts_with(mode_choose, "SC") then
             mode_choose = "SC"
         end
+    elseif value == "KK advice" then
+        mode_choose = "SC"
     end
 end
 
@@ -306,6 +367,20 @@ function debug_mode_random_choose_poem()
 end
 
 -----------------------------------------------------------------
+
+function getCoordinates(angle, length)
+    local radian = math.rad(angle)
+
+    local x = length * math.cos(radian) + screenWidth/2
+    local y = length * math.sin(radian) + screenHeight/2
+    
+    return x, y
+end
+
+
+function mapValue(old_value, old_min, old_max, new_min, new_max)
+    return math.floor((old_value - old_min) * (new_max - new_min) / (old_max - old_min) + new_min)
+end
 
 
 function utf8_reverse(input)
@@ -439,7 +514,7 @@ function reload(random_seed)
         end
     end
 
-    if starts_with(mode_choose, "SC") then
+    if starts_with(mode_choose, "SC") or starts_with(mode_choose, "KK") then
         render_sc_poem(last_time_str, random_seed)
     elseif mode_choose == "English" then
         render_en_poem(last_time_str, random_seed)
