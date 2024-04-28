@@ -138,6 +138,7 @@ function switch_sc_poem_direction(state)
 
     else
         playdate.stopAccelerometer()
+        kk_counter = 5
         reload(current_seed)
     end
 
@@ -150,16 +151,25 @@ function draw_analog_clock()
     if hour>12 then
         hour -= 12
     end
+    local screen_angle_offset = -90
+    if mode_choose == "SC_L90" then
+        screen_angle_offset = -180        
+    elseif mode_choose == "SC_180" then
+        screen_angle_offset = -270
+    elseif mode_choose == "SC_R90" then
+        screen_angle_offset = 0
+    end
+
     local hour_angle = mapValue(hour+(time_now.minute/60), 0, 12, 0, 360)
     local minute_angle = mapValue(time_now.minute, 0, 60, 0, 360)
     local hour_start_blank = 60
     local hour_length = 24 + hour_start_blank
     local minute_start_blank = 30
     local minute_length = 60 + minute_start_blank
-    local hour_start_x, hour_start_y = getCoordinates(hour_angle-90, hour_start_blank)
-    local hour_end_x, hour_end_y = getCoordinates(hour_angle-90, hour_length)
-    local minute_start_x, minute_start_y = getCoordinates(minute_angle-90, minute_start_blank)
-    local minute_end_x, minute_end_y = getCoordinates(minute_angle-90, minute_length)
+    local hour_start_x, hour_start_y = getCoordinates(hour_angle+screen_angle_offset, hour_start_blank)
+    local hour_end_x, hour_end_y = getCoordinates(hour_angle+screen_angle_offset, hour_length)
+    local minute_start_x, minute_start_y = getCoordinates(minute_angle+screen_angle_offset, minute_start_blank)
+    local minute_end_x, minute_end_y = getCoordinates(minute_angle+screen_angle_offset, minute_length)
     print(hour_angle, minute_angle)
     print(hour_start_x, hour_start_y, hour_end_x, hour_end_y)
     print(minute_start_x, minute_start_y, minute_end_x, minute_end_y)
